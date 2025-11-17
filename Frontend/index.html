@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StyleSpecturm - Personal Color Analysis & Try-On</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* General Setup - MATCHING THE PINK/MAROON THEME */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #a639a9; /* Purple Background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+        }
+
+        /* Main Container - MATCHING THE OUTER BORDER */
+        .container { 
+            max-width: 900px; 
+            margin: 40px auto; 
+            background: #e6a0f1; /* Light Pink/Purple Container */
+            padding: 30px; 
+            border-radius: 40px; /* Highly rounded corners */
+            border: 5px solid #610606; /* Dark Red/Maroon Border */
+            box-shadow: 5px 5px 10px; /* Shadow */
+        }
+        
+        /* --- NEW HEADING BANNER STYLE --- */
+        .header-banner {
+            background-color: #efe78c; /* Light Yellow Background */
+            padding: 20px;
+            border-radius: 20px;
+            border: 3px solid #8b0000; /* Dark Red/Maroon Border */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .header-banner h1 {
+            font-size: 2.5rem;
+            font-family:Georgia, 'Times New Roman', Times, serif;
+            color: #860606;
+            margin-bottom: 5px;
+            font-weight: 700;
+            text-align: center;
+        }
+        .header-banner p {
+            font-size: 1.1rem;
+            font-family:cursive;
+            color: #21221b;
+            text-align: center;
+        }
+        /* --- END NEW HEADING BANNER STYLE --- */
+
+        h2, h3 { color: #8c1797; text-align: center; font-weight: 700; }
+        .video-container, .result-container { margin-top: 20px; text-align: center; }
+        
+        /* --- CAMERA FEED STYLES --- */
+        #webcam-feed-wrapper {
+            position: relative;
+            width: 600px; 
+            height: 440px; 
+            border: 4px solid #690506; 
+            border-radius: 40px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            margin: 0 auto; 
+            background-color: #861597a8; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #webcam-feed { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            border-radius: 40px; 
+        }
+
+        #placeholder-content {
+            position: absolute;
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fdf5e6; 
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            font-size: 3rem; 
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        #placeholder-image {
+            max-width: 40%; 
+            height: auto;
+            opacity: 0.8; 
+            margin-bottom: 10px;
+            border-radius: 50%; 
+            border: 5px solid #690506;
+        }
+        /* --- END: CAMERA FEED STYLES --- */
+        
+        /* Controls: Matching the Pink/Maroon Theme for buttons */
+        .controls button, #launch-try-on { 
+            padding: 12px 25px; margin: 10px; background-color: #710404; /* Maroon Button */
+            color: #ede9c4; /* Creamy Text */
+            border: 4px solid #f17575; /* Pink/Red Border */
+            border-radius: 18px; /* High Rounded Corners */
+            cursor: pointer; transition: background-color 0.3s, transform 0.2s; 
+            font-weight: 600; 
+        }
+        .controls button:hover, #launch-try-on:hover { background-color: #a41414; transform: translateY(-1px); }
+        .controls button:disabled, #launch-try-on:disabled { background-color: #600707; color: #ede9c4; border-color: #f17575; cursor: not-allowed; }
+
+        /* --- Circular Palette Styles (Unchanged) --- */
+        #circular-palette-wrapper {
+            position: relative; 
+            width: 300px; 
+            height: 300px; 
+            margin: 30px auto;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f4f8; 
+            box-shadow: 0 0 0 10px rgba(152, 183, 214, 0.8);
+        }
+        #palette-center {
+            position: absolute;
+            width: 120px; 
+            height: 120px; 
+            border-radius: 50%;
+            background: rgb(229, 118, 118);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            padding: 10px;
+            z-index: 2; /* Ensure center is on top of the swatches */
+        }
+        #center-season-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #1e3a8a;
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1.1;
+        }
+        .wheel-swatch {
+            position: absolute;
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            z-index: 1; /* Swatches on top of the circle, but below the center */
+        }
+        .wheel-swatch:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+            z-index: 3; /* Hovered swatch on top of everything */
+        }
+        /* --- Palette Highlight Box (Tooltip) MODIFIED: Confirmed Maroon Background --- */
+         #palette-highlight-box {
+            position: absolute;
+            background-color: #8b0000; /* Dark Red/Maroon */
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0; /* Ensures it starts hidden */
+            pointer-events: none; /* Crucial: ensures clicks go through to swatches */
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 5; /* On top of everything */
+        }
+        /* --- END Circular Palette Styles --- */
+        
+        
+        /* --- NEW STYLES: Colors to Avoid Container Style (Unchanged) --- */
+        #colors-avoid-box {
+            margin: 30px auto;
+            padding: 15px 10px; 
+            background-color: #710404; /* Dark Maroon Background for contrast/prominence */
+            color: #f7e6e6; /* Light text */
+            border: 3px solid #f7e6e6; /* Light border */
+            border-radius: 15px;
+            max-width: 800px; /* Use more of the container width */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+        #colors-avoid-box h3 {
+            color: #f5d0d0; /* Light text for the header */
+            border-bottom-color: #f5d0d0;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+        .avoid-grid {
+            display: grid;
+            /* Force a single row of 10 columns for a long rectangular strip */
+            grid-template-columns: repeat(10, 1fr); 
+            gap: 8px; /* Tighter gap */
+            margin-top: 10px;
+            padding: 0 10px;
+        }
+        .avoid-swatch-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            align-self: center; /* Ensure items align nicely */
+        }
+        .avoid-swatch { 
+            width: 35px; /* Small square box */
+            height: 35px; 
+            border-radius: 5px; 
+            border: 2px solid #fff; /* White border for clear separation */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .avoid-swatch-name {
+            font-size: 0.65rem; /* Smaller text */
+            color: #ede9c4; /* Creamy text to stand out on dark background */
+            margin-top: 3px;
+            font-weight: 500;
+        }
+        /* --- END NEW STYLES: Colors to Avoid Container Style --- */
+
+
+        /* --- Modal Styles (Unchanged) --- */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 100; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.9); 
+        }
+        .modal-content {
+            background-color: #d6cb4fea; 
+            color: #243f75; 
+            margin: 3% auto; 
+            padding: 30px;
+            border-radius: 12px;
+            width: 95%;
+            max-width: 1100px; 
+            position: relative;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(204, 168, 24, 0.618);
+        }
+        .close-btn {
+            color: #575e69;
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #3b82f6;
+        }
+        /* --- Try-On Image (Circular Face Crop) --- */
+        #face-crop-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-top: 10px;
+            width: 400px; 
+            height: 400px; 
+            overflow: hidden; 
+            border-radius: 50%; 
+            box-shadow: 0 5px 20px rgba(192, 180, 24, 0.466);
+            margin-bottom: 90px;
+            border: none; 
+            transition: border-color 0.3s ease;
+        }
+        #face-crop-img {
+            width: 100%;
+            height: 100%; 
+            object-fit: cover; 
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 50%; 
+        }
+        /* Circular Try-On Swatch (AS BORDER - This is the core try-on logic) */
+        #try-on-swatch-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%; 
+            height: 100%; 
+            pointer-events: none;
+            opacity: 1; 
+            box-shadow: inset 0 0 0 100px rgba(79, 69, 69, 0.466); 
+            transition: box-shadow 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+            border-radius: 50%;
+        }
+        /* --- Tabular Palette Display (All Colors) (Unchanged) --- */
+        .all-palette-grid {
+            text-align: left;
+            margin-top: 20px;
+            max-height: 80vh; 
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+        .season-group {
+            border: 1px solid #edd9f3; 
+            background-color: #9e4aaf; 
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .color-row {
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 12px; 
+            justify-items: center;
+            align-items: center;
+        }
+        .swatch { 
+            width: 55px; 
+            height: 55px; 
+            border-radius: 50%; 
+            border: 3px solid #ccc; 
+            cursor: pointer; 
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.3s; 
+            place-self: center; 
+        }
+        .swatch:hover { 
+            transform: scale(1.1); 
+            border-color: #60a5fa;
+            box-shadow: 0 0 12px rgba(96, 165, 250, 0.8); 
+        }
+        /* Style Suggestions Grid (Unchanged) */
+       .suggestion-item img {
+            transition: transform 0.2s;
+        }
+        .suggestion-item a:hover img {
+            transform: scale(1.05); 
+        }
+        /* Overriding tailwind for the gender buttons to match the new theme (Unchanged) */
+        .controls button#show-men-btn, .controls button#show-women-btn {
+            background-color: #f7a6a6;
+            color: #8b0000;
+            border: 2px solid #8b0000;
+        }
+        .controls button#show-men-btn:hover, .controls button#show-women-btn:hover {
+             background-color: #f09595;
+        }
+
+        /* --- NEW STYLES: Seasons in Style Grid Styles (MODIFIED TO BE SMALLER) --- */
+        #seasons-in-style {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 4px solid #f17575; /* Separator line matching border color */
+        }
+        .seasons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2x2 grid structure */
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .season-card {
+            background-color: #fff0f5; /* Very light pink background */
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #8c1797;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center; /* Center content of the card */
+            transition: transform 0.3s;
+        }
+        .season-card:hover {
+            transform: translateY(-5px);
+        }
+        .season-card h4 {
+            font-size: 1.5rem; /* Reduced Title Size */
+            color: #710404; /* Dark Maroon title */
+            margin-bottom: 5px;
+            font-weight: 800;
+        }
+        .season-card p.subtitle {
+            font-size: 0.9rem; /* Reduced Subtitle Size */
+            color: #a639a9; /* Purple subtitle for the characteristics */
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .season-card img {
+            width: 120px; /* Reduced image size */
+            height: 120px;
+            object-fit: contain;
+            border-radius: 50%; /* Making it circular to resemble a face crop/swatch */
+            margin: 0 auto 15px auto; /* Center and provide bottom margin */
+            border: 5px solid #610606; /* Dark Maroon border for emphasis */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .season-card ul {
+            list-style: none; /* Remove default bullets */
+            padding: 0;
+            text-align: left; /* Align list items left */
+            max-width: 90%;
+            margin: 0 auto;
+        }
+        .season-card ul li {
+            margin-bottom: 8px;
+            font-size: 0.85rem; /* Reduced list item size */
+            color: #4b5563; /* Dark gray text */
+            line-height: 1.4;
+            padding-left: 20px; /* Indent the text */
+            position: relative;
+        }
+        .season-card ul li::before {
+            content: '•'; /* Use a custom bullet point */
+            color: #a41414; /* Maroon bullet color */
+            font-weight: bold;
+            display: inline-block; 
+            width: 1em;
+            margin-left: -1em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-banner">
+        <h1>StyleSpecturm</h1>
+        <p>~ Every Shade Finds Its Style</p>
+    </div>
+    <div class="video-container">
+        <div id="webcam-feed-wrapper">
+            <div id="placeholder-content">
+                <img id="placeholder-image" src="/static/smile_please.png" alt="Say Cheese">
+                <span>Say Cheese!!</span>
+            </div>
+            <video id="webcam-feed" autoplay style="display: none;"></video> 
+        </div>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <div class="controls">
+            <button id="start-webcam">Start Camera</button>
+            <button id="capture-btn" disabled>Capture Image</button>
+        </div>
+    </div>
+<div class="my_box">
+    
+    <hr class="my-6 border-pink-200">
+
+    <div class="result-container" id="results" style="display:none;">
+        <h2 class="text-xl font-semibold text-pink-700"> Analysis Results</h2>
+
+        <h3> Predicted Palette</h3>
+        <div id="circular-palette-wrapper">
+            <div id="palette-highlight-box"></div> 
+            
+            <div id="palette-center">
+                <p class="text-xs text-pink-900 font-bold mb-1">Season</p>
+                <span id="center-season-name">...</span>
+            </div>
+            <div id="circular-palette">
+                <p style="text-align: center; color:#6b7280; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:100%; z-index:0;">Awaiting analysis...</p>
+            </div>
+        </div>
+        
+        <div id="colors-avoid-box" style="display:none;">
+            <h3 class="text-xl font-semibold text-red-800 border-b pb-2 border-red-300"> ❌ Colors to Avoid 🚫 </h3>
+            <div id="avoid-colors-grid" class="avoid-grid">
+                </div>
+        </div>
+        <button id="launch-try-on" disabled class="mt-4">🚀 Launch ALL Color Try-On Frame</button>
+
+        <div id="seasons-in-style">
+            <h2>Understanding the Seasons in Style </h2>
+            <div class="seasons-grid">
+                
+                <div class="season-card">
+                    <h4>SPRING</h4>
+                    <p class="subtitle">bright • light • warm</p>
+                    <img src="/static/spring.png" alt="Spring Color Palette Example">
+                    <ul>
+                       <li><b>Main Feature:</b> Your natural glow is bright, clear, and full of light — you truly shine with freshness.</li>
+                        <li><b>Best Colors:</b> Cheerful shades like coral, peach, and soft lemon yellow highlight your lively and positive energy.</li> 
+                        <li><b>Best Metals:</b> Shiny gold and rose gold enhance your warmth and add a radiant touch to your look.</li> 
+                        <li><b>Colors to Avoid:</b> Dark or dull shades can hide your brightness — stay with light, glowing tones that bring out your best.</li>
+                    </ul>
+                </div>
+                
+                <div class="season-card">
+                    <h4>SUMMER</h4>
+                    <p class="subtitle">cool • soft • light</p>
+                    <img src="/static/summer.png" alt="Summer Color Palette Example">
+                    <ul>
+                       <li><b>Main Feature:</b> Your beauty shines through gentle cool tones and a naturally soft, graceful look.</li> 
+                       <li><b>Best Colors:</b> Calm, delicate shades like periwinkle blue, lavender, and dusty rose bring out your elegance and fresh glow.</li>
+                        <li><b>Best Metals:</b> Silver, white gold, and platinum highlight your cool undertone and add a refined touch to your style.</li>
+                        <li><b>Colors to Avoid:</b> Bright oranges, jet black, or very strong colors can overpower your soft charm — lighter, cooler tones keep you looking effortlessly radiant.</li>
+                    </ul>
+                </div>
+                
+                <div class="season-card">
+                    <h4>AUTUMN</h4>
+                    <p class="subtitle">warm • deep • muted</p>
+                    <img src="/static/autumn.png" alt="Autumn Color Palette Example">
+                    <ul>
+                        <li><b>Main Feature:</b> Your look glows with warmth, richness, and an earthy depth that feels naturally inviting.</li> 
+                        <li><b>Best Colors:</b> Cozy, golden shades like olive green, terracotta, and deep gold enhance your warmth and natural beauty.</li>
+                         <li><b>Best Metals:</b> Bronze, copper, and matte gold blend beautifully with your tone, adding a soft, luxurious glow.</li> 
+                         <li><b>Colors to Avoid:</b> Cool or icy colors, and very bright shades, can take away your natural warmth — stay with golden, grounded tones that make you shine confidently.</li>
+                    </ul>
+                </div>
+                
+                <div class="season-card">
+                    <h4>WINTER</h4>
+                    <p class="subtitle">cool • clear • deep</p>
+                    <img src="/static/winter.png" alt="Winter Color Palette Example">
+                    <ul>
+                        <li><b>Main Feature:</b> You stand out with striking clarity and bold contrast — your look is powerful and full of presence.</li> 
+                        <li><b>Best Colors:</b> Crisp, cool shades like true black, pure white, and sapphire blue highlight your strong and confident energy.</li> 
+                        <li><b>Best Metals:</b> Bright silver, platinum, and sparkling jewels enhance your cool undertone and add a sleek, polished edge.</li> 
+                        <li><b>Colors to Avoid:</b> Soft, muted, or warm earthy tones like moss green or camel can dull your natural brilliance — bold, cool shades let your confidence shine.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="mt-8"> Style Suggestions</h3>
+        
+        <div class="controls mb-4 flex justify-center space-x-4">
+            <button id="show-men-btn"> Show Men's Suggestions</button>
+            <button id="show-women-btn"> Show Women's Suggestions</button>
+        </div>
+        <div class="flex flex-wrap justify-center gap-4 p-4" id="suggestions-grid">
+        </div>
+    </div>
+    
+    </div>
+
+
+<div id="try-on-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2 style="margin-bottom: 5px; ">Seasonal Color Try-On</h2>
+        <p class="text-purple-500" >Click any color swatch below to see the vivid effect on your skin tone.</p>
+
+        <div class="flex mt-8" style="justify-content: space-around; align-items: flex-start;">
+            <div style="flex-basis: 40%; text-align: center;">
+                <h3 style="margin-top: 0;">Your Personal Color Mirror ✨</h3> 
+                <div id="face-crop-wrapper">
+                    <img id="face-crop-img" src="" alt="Captured Face Crop">
+                    <div id="try-on-swatch-modal"></div> 
+                </div>
+            </div>
+
+            <div style="flex-basis: 55%;">
+                <h3 style="margin-top: 0;">All Seasonal Palettes (Click to Try)</h3>
+                <div class="all-palette-grid" id="all-palette-grid">
+                    <p>Loading full color grid from dataset...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    const video = document.getElementById('webcam-feed');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('capture-btn');
+    const startWebcamBtn = document.getElementById('start-webcam');
+    const resultsDiv = document.getElementById('results');
+    const seasonResult = document.getElementById('center-season-name');
+    // Removed: const skinColorHexSpan = document.getElementById('skin-color-hex');
+    const suggestionsGrid = document.getElementById('suggestions-grid');
+    const launchTryOnBtn = document.getElementById('launch-try-on');
+    const circularPalette = document.getElementById('circular-palette');
+    const showMenButton = document.getElementById('show-men-btn');
+    const showWomenButton = document.getElementById('show-women-btn');
+    const tryOnModal = document.getElementById('try-on-modal');
+    const closeModal = document.querySelector('.close-btn');
+    const faceCropImg = document.getElementById('face-crop-img');
+    const tryOnSwatchModal = document.getElementById('try-on-swatch-modal');
+    const allPaletteGrid = document.getElementById('all-palette-grid');
+    const paletteHighlightBox = document.getElementById('palette-highlight-box');
+    const placeholderContent = document.getElementById('placeholder-content');
+    // --- ADDED: Reference to the palette wrapper for correct relative positioning ---
+    const circularPaletteWrapper = document.getElementById('circular-palette-wrapper'); 
+    
+    let capturedBlob = null;
+    let paletteData = []; 
+    let allPaletteData = []; 
+    let capturedImageUrl = null;
+    let allSuggestions = []; 
+
+    // --- NEW DATA: Colors to Avoid for each season (Unchanged) ---
+    const colorsToAvoid = {
+        'TRUE WINTER': [
+            { name: 'Orange', hex: '#FFA500' }, { name: 'Rust', hex: '#B7410E' }, 
+            { name: 'Mustard', hex: '#FFDB58' }, { name: 'Camel', hex: '#C19A6B' }, 
+            { name: 'Olive Green', hex: '#808000' }, { name: 'Gold', hex: '#FFD700' }, 
+            { name: 'Warm Beige', hex: '#F5F5DC' }, { name: 'Peach', hex: '#FFE5B4' }, 
+            { name: 'Tan', hex: '#D2B48C' }, { name: 'Warm Ivory', hex: '#FFFFF0' }
+        ],
+        'LIGHT SPRING': [
+            { name: 'Black', hex: '#000000' }, { name: 'Charcoal Gray', hex: '#36454F' }, 
+            { name: 'Deep Navy', hex: '#000080' }, { name: 'Burgundy', hex: '#800020' }, 
+            { name: 'Olive Green', hex: '#808000' }, { name: 'Cool Lavender', hex: '#9683EC' }, 
+            { name: 'Icy Blue', hex: '#A1CFF0' }, { name: 'Mustard Yellow', hex: '#FFDB58' }, 
+            { name: 'Slate Gray', hex: '#708090' }, { name: 'Neon Pink', hex: '#FF6EC7' }
+        ],
+        'TRUE SPRING': [ // Corresponds to 🌼 True Spring (Warm Spring)
+            { name: 'Black', hex: '#000000' }, { name: 'Cool Navy', hex: '#3C4D73' }, 
+            { name: 'Magenta', hex: '#FF00FF' }, { name: 'Cool Gray', hex: '#8C92AC' }, 
+            { name: 'Icy Pink', hex: '#F0D0E0' }, { name: 'Blue-Violet', hex: '#8A2BE2' }, 
+            { name: 'Burgundy', hex: '#800020' }, { name: 'Dusty Rose', hex: '#C9A9A6' }, 
+            { name: 'Slate Blue', hex: '#6A5ACD' }, { name: 'Charcoal', hex: '#36454F' }
+        ],
+        'BRIGHT SPRING': [
+            { name: 'Olive Green', hex: '#808000' }, { name: 'Mustard', hex: '#FFDB58' }, 
+            { name: 'Taupe', hex: '#483C32' }, { name: 'Dusty Mauve', hex: '#B84E76' }, 
+            { name: 'Charcoal Gray', hex: '#36454F' }, { name: 'Deep Maroon', hex: '#800000' }, 
+            { name: 'Black', hex: '#000000' }, { name: 'Cool Lavender', hex: '#9683EC' }, 
+            { name: 'Slate Blue', hex: '#6A5ACD' }, { name: 'Beige', hex: '#F5F5DC' }
+        ],
+        'LIGHT SUMMER': [
+            { name: 'Black', hex: '#000000' }, { name: 'Deep Brown', hex: '#654321' }, 
+            { name: 'Dark Olive', hex: '#556B2F' }, { name: 'Burnt Orange', hex: '#CC5500' }, 
+            { name: 'Mustard', hex: '#FFDB58' }, { name: 'Tomato Red', hex: '#FF6347' }, 
+            { name: 'Warm Coral', hex: '#F88379' }, { name: 'Bright Turquoise', hex: '#00F0FF' }, 
+            { name: 'Gold', hex: '#FFD700' }, { name: 'Chocolate Brown', hex: '#7B3F00' }
+        ],
+        'SOFT SUMMER': [
+            { name: 'Neon Pink', hex: '#FF6EC7' }, { name: 'True Red', hex: '#FF0000' }, 
+            { name: 'Orange', hex: '#FFA500' }, { name: 'Bright Turquoise', hex: '#00F0FF' }, 
+            { name: 'Black', hex: '#000000' }, { name: 'Gold', hex: '#FFD700' }, 
+            { name: 'Warm Coral', hex: '#F88379' }, { name: 'Mustard', hex: '#FFDB58' }, 
+            { name: 'Deep Forest Green', hex: '#014421' }, { name: 'Chocolate Brown', hex: '#7B3F00' }
+        ],
+        'TRUE SUMMER': [ // Corresponds to 🌬️ True Summer (Cool Summer)
+            { name: 'Orange', hex: '#FFA500' }, { name: 'Warm Yellow', hex: '#FFEA00' }, 
+            { name: 'Olive', hex: '#808000' }, { name: 'Mustard', hex: '#FFDB58' }, 
+            { name: 'Tomato Red', hex: '#FF6347' }, { name: 'Gold', hex: '#FFD700' }, 
+            { name: 'Chocolate Brown', hex: '#7B3F00' }, { name: 'Peach', hex: '#FFE5B4' }, 
+            { name: 'Rust', hex: '#B7410E' }, { name: 'Black', hex: '#000000' }
+        ],
+        'DARK SUMMER': [
+            { name: 'Warm Beige', hex: '#F5F5DC' }, { name: 'Orange', hex: '#FFA500' }, 
+            { name: 'Mustard', hex: '#FFDB58' }, { name: 'Gold', hex: '#FFD700' }, 
+            { name: 'Rust', hex: '#B7410E' }, { name: 'Olive Green', hex: '#808000' }, 
+            { name: 'Bright Yellow', hex: '#FFFF00' }, { name: 'Peach', hex: '#FFE5B4' }, 
+            { name: 'Camel', hex: '#C19A6B' }, { name: 'Tan', hex: '#D2B48C' }
+        ],
+        'SOFT AUTUMN': [
+            { name: 'Neon Green', hex: '#39FF14' }, { name: 'Fuchsia', hex: '#FF00FF' }, 
+            { name: 'Icy Blue', hex: '#A1CFF0' }, { name: 'Black', hex: '#000000' }, 
+            { name: 'True White', hex: '#FFFFFF' }, { name: 'Cool Gray', hex: '#8C92AC' }, 
+            { name: 'Bright Turquoise', hex: '#00F0FF' }, { name: 'Magenta', hex: '#FF00FF' }, 
+            { name: 'Silver', hex: '#C0C0C0' }, { name: 'Electric Blue', hex: '#7DF9FF' }
+        ],
+        'TRUE AUTUMN': [ // Corresponds to 🍁 True Autumn (Warm Autumn)
+            { name: 'Icy Blue', hex: '#A1CFF0' }, { name: 'Fuchsia', hex: '#FF00FF' }, 
+            { name: 'Magenta', hex: '#FF00FF' }, { name: 'True Black', hex: '#000000' }, 
+            { name: 'Cool Gray', hex: '#8C92AC' }, { name: 'Baby Pink', hex: '#F4C2C2' }, 
+            { name: 'Lilac', hex: '#C8A2C8' }, { name: 'Silver', hex: '#C0C0C0' }, 
+            { name: 'Bright White', hex: '#FFFFFF' }, { name: 'Bright Purple', hex: '#E100FF' }
+        ],
+        'DARK AUTUMN': [
+            { name: 'Icy Blue', hex: '#A1CFF0' }, { name: 'Baby Pink', hex: '#F4C2C2' }, 
+            { name: 'Lavender', hex: '#E6E6FA' }, { name: 'Light Gray', hex: '#D3D3D3' }, 
+            { name: 'Cool Mint', hex: '#B6FCD5' }, { name: 'White', hex: '#FFFFFF' }, 
+            { name: 'Cool Navy', hex: '#3C4D73' }, { name: 'Silver', hex: '#C0C0C0' }, 
+            { name: 'Magenta', hex: '#FF00FF' }, { name: 'Lemon Yellow', hex: '#FFF44F' }
+        ],
+        'BRIGHT WINTER': [
+            { name: 'Olive', hex: '#808000' }, { name: 'Rust', hex: '#B7410E' }, 
+            { name: 'Mustard', hex: '#FFDB58' }, { name: 'Brown', hex: '#A52A2A' }, 
+            { name: 'Taupe', hex: '#483C32' }, { name: 'Camel', hex: '#C19A6B' }, 
+            { name: 'Warm Beige', hex: '#F5F5DC' }, { name: 'Peach', hex: '#FFE5B4' }, 
+            { name: 'Dusty Rose', hex: '#C9A9A6' }, { name: 'Moss Green', hex: '#8A9A5B' }
+        ]
+        // Note: DEEP WINTER avoidance list is unchanged from the previous code
+    };
+    // Helper functions (rgbToHex, hexToRgba, showMessageBox) are unchanged
+    const rgbToHex = (r, g, b) => '#' + [r, g, b].map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+    
+    function hexToRgba(hex, alpha = 1.0) {
+        const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+        hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!result) return `rgba(128, 128, 128, ${alpha})`;
+        const r = parseInt(result[1], 16);
+        const g = parseInt(result[2], 16);
+        const b = parseInt(result[3], 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function showMessageBox(message) {
+        const existingBox = document.getElementById('message-box');
+        if (existingBox) existingBox.remove();
+        const box = document.createElement('div');
+        box.id = 'message-box';
+        box.style = `
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: #f87171; color: white; padding: 20px; border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; font-weight: bold;
+            text-align: center; cursor: pointer;
+        `;
+        box.textContent = message;
+        box.onclick = () => box.remove();
+        document.body.appendChild(box);
+        setTimeout(() => box.remove(), 5000); 
+    }
+
+
+    // --- Webcam Control (Unchanged) ---
+    startWebcamBtn.addEventListener('click', async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: 600, height: 440 } 
+            });
+            video.srcObject = stream;
+            
+            placeholderContent.style.display = 'none';
+            video.style.display = 'block';
+
+            video.onloadedmetadata = () => {
+                video.play();
+                captureBtn.disabled = false;
+                startWebcamBtn.disabled = true;
+            };
+        } catch (err) {
+            const message = document.createElement('p');
+            message.className = 'text-red-500 mt-2';
+            message.textContent = 'Error accessing camera. Please ensure you have granted camera permissions.';
+            document.querySelector('.controls').appendChild(message);
+        }
+    });
+
+    // --- Image Capture (Modified) ---
+    captureBtn.addEventListener('click', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        if(video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+        
+        video.style.display = 'none';
+        placeholderContent.style.display = 'flex';
+
+        startWebcamBtn.disabled = false;
+        captureBtn.disabled = true;
+        
+        canvas.toBlob((blob) => {
+            capturedBlob = blob;
+            if (capturedImageUrl) URL.revokeObjectURL(capturedImageUrl);
+            capturedImageUrl = URL.createObjectURL(blob);
+
+            faceCropImg.src = capturedImageUrl; 
+            resultsDiv.style.display = 'block';
+            launchTryOnBtn.disabled = true; 
+            
+            // Reset UI for analysis state
+            seasonResult.textContent = 'Analyzing...';
+            circularPalette.innerHTML = '<p style="text-align: center; color:#6b7280; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:100%; z-index:0;">Awaiting analysis...</p>'; 
+            allPaletteGrid.innerHTML = '<p class="text-center text-gray-400">Loading full color grid...</p>';
+            suggestionsGrid.innerHTML = ''; 
+
+            // Hide the 'Colors to Avoid' box while analyzing
+            document.getElementById('colors-avoid-box').style.display = 'none';
+            analyzeImage();
+        }, 'image/jpeg', 0.9);
+    });
+
+    // --- Modal Control (Unchanged) ---
+    launchTryOnBtn.addEventListener('click', openTryOnModal);
+    closeModal.addEventListener('click', () => { tryOnModal.style.display = 'none'; });
+    window.addEventListener('click', (event) => {
+        if (event.target === tryOnModal) { tryOnModal.style.display = 'none'; }
+    });
+
+    function openTryOnModal() {
+        if (paletteData.length > 0 && allPaletteData.length > 0) {
+            const initialColorHex = paletteData[0].hex_code || '#808080'; 
+            applyTryOn(initialColorHex); 
+            tryOnModal.style.display = 'block';
+        } else {
+            console.error("Analysis data not ready.");
+            showMessageBox("Error: Analysis data is not ready. Please try again.");
+        }
+    }
+
+    // --- Try-On Logic (Applies color as circular frame/drape) (Unchanged) ---
+    function applyTryOn(hex) {
+        const rgba = hexToRgba(hex, 1.0); 
+        tryOnSwatchModal.style.boxShadow = `inset 0 0 0 100px ${rgba}`; 
+    }
+
+    // --- Analysis Request (Unchanged) ---
+    async function analyzeImage() {
+        console.info("Sending image to backend API for analysis...");
+        
+        const formData = new FormData();
+        formData.append('image', capturedBlob, 'capture.jpeg');
+
+        try {
+            const response = await fetch('/api/analyze_image', { 
+                method: 'POST',
+                body: formData,
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `API returned error: ${response.status}`);
+            }
+
+            const data = await response.json(); 
+            
+            if (data && data.predicted_season) {
+                paletteData = data.palette_colors || []; 
+                allPaletteData = data.all_palette_colors || []; 
+                allSuggestions = data.suggestions || []; 
+                
+                displayResults(data);
+                launchTryOnBtn.disabled = false;
+                console.info("Analysis successful and results displayed.");
+            } else {
+                throw new Error("Analysis failed: Invalid data structure received from API.");
+            }
+        } catch (error) {
+            console.error("Image analysis failed:", error);
+            showMessageBox(`Analysis failed: ${error.message}.`);
+            seasonResult.textContent = 'ERROR';
+            // MODIFIED: Center the error text vertically within the circular-palette div
+            circularPalette.innerHTML = '<p style="text-align: center; color:#dc2626; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:100%; z-index:0;">Analysis Failed</p>';
+            launchTryOnBtn.disabled = true;
+            startWebcamBtn.disabled = false;
+            // Note: seasons-in-style visibility is controlled by the parent #results div now.
+        }
+    }
+
+
+    // --- Result Display (Modified) ---
+    function displayResults(data) {
+        const defaultSeason = 'N/A';
+
+        seasonResult.textContent = (data.predicted_season || defaultSeason).toUpperCase();
+        
+        // Removed: Logic for dominant skin color display
+
+        displayCircularPalette(paletteData);
+        displayTabularPalette(allPaletteData);
+        
+        // Removed: Explicit display:block for seasons-in-style
+        
+        // --- Display Colors to Avoid ---
+        displayColorsToAvoid(data.predicted_season); 
+
+        suggestionsGrid.innerHTML = '';
+        updateSuggestions('Men'); // Default to showing Men's suggestions first
+    }
+
+    /**
+     * Filters and displays style suggestions based on gender. (Unchanged)
+     */
+    function updateSuggestions(gender) {
+        suggestionsGrid.innerHTML = ''; 
+        
+        const filteredSuggestions = allSuggestions.filter(s => s.gender && s.gender.toLowerCase() === gender.toLowerCase());
+        
+        if (filteredSuggestions.length > 0) {
+            filteredSuggestions.forEach(item => {
+                const suggestionItem = document.createElement('a');
+                suggestionItem.className = 'suggestion-item block w-48 p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300';
+                suggestionItem.href = item.product_link || '#';
+                suggestionItem.target = '_blank'; 
+                
+                const img = document.createElement('img');
+                img.src = item.image_path; 
+                img.alt = item.style || 'Suggestion'; 
+                img.className = 'w-full h-auto rounded-md mb-1'; 
+
+                const styleText = document.createElement('p');
+                styleText.className = 'text-xs font-medium text-gray-700 mt-1 truncate text-center';
+                styleText.textContent = `${item.style} (${gender}'s)`;
+                
+                suggestionItem.appendChild(img);
+                suggestionItem.appendChild(styleText);
+                suggestionsGrid.appendChild(suggestionItem);
+            });
+        } else {
+            suggestionsGrid.innerHTML = `<p style="text-align: center; color:#ef4444; width: 100%;">No ${gender}'s suggestions available for this season.</p>`;
+        }
+    }
+
+    /**
+     * Updates the predicted palette grid (Circular Wheel). 
+     * FIX: Corrected positioning logic for the tooltip (palette highlight box)
+     */
+    function displayCircularPalette(colors) {
+        circularPalette.innerHTML = '';
+        paletteHighlightBox.style.opacity = '0'; 
+
+        if (colors.length === 0) {
+            // Re-use the absolutely positioned loading style
+            circularPalette.innerHTML = '<p style="text-align: center; color:#6b7280; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:100%; z-index:0;">No Predicted Palette Data</p>';
+            return;
+        }
+
+        const displayColors = colors.slice(0, 16); 
+        const numColors = displayColors.length;
+        const radius = 95; 
+        const centerX = 150; 
+        const centerY = 150; 
+        
+        displayColors.forEach((color, index) => {
+            const angle = (360 / numColors) * index * (Math.PI / 180); // Calculate angle in radians
+
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+
+            const swatch = document.createElement('div');
+            swatch.className = 'wheel-swatch';
+            swatch.style.backgroundColor = color.hex_code;
+            
+            // Swatch positioning logic (relative to the 300x300 circular-palette-wrapper)
+            swatch.style.left = `calc(${centerX + x}px - 20px)`; // -20px is half of swatch width (40px/2)
+            swatch.style.top = `calc(${centerY + y}px - 20px)`;  // -20px is half of swatch height (40px/2)
+            
+            swatch.dataset.name = color.name || 'Color'; 
+            swatch.dataset.hex = color.hex_code;
+            
+            swatch.addEventListener('click', () => applyTryOn(color.hex_code));
+            
+            // --- FIX: Correct Mouseover/Mouseout events for the highlight box ---
+            swatch.addEventListener('mouseover', (e) => {
+                const swatchRect = e.target.getBoundingClientRect();
+                // Get the position of the parent wrapper
+                const wrapperRect = circularPaletteWrapper.getBoundingClientRect(); 
+                
+                // Calculate coordinates of the swatch relative to the wrapper's top-left corner
+                const relativeLeft = swatchRect.left - wrapperRect.left;
+                const relativeTop = swatchRect.top - wrapperRect.top;
+                
+                // 1. Set Content
+                paletteHighlightBox.innerHTML = `
+                    ${e.target.dataset.name} <span style="font-size: 0.8em; color: #ccc;">(${e.target.dataset.hex})</span>
+                `;
+
+                // 2. Position the box just beside the swatch
+                // relativeLeft + 45px (swatch width 40px + 5px margin)
+                paletteHighlightBox.style.left = `${relativeLeft + 45}px`; 
+                
+                // relativeTop + 5px (to vertically center the smaller box against the 40px swatch)
+                paletteHighlightBox.style.top = `${relativeTop + 5}px`;
+
+                // 3. Make it visible and bring the swatch to the front
+                paletteHighlightBox.style.opacity = '1';
+                paletteHighlightBox.style.transform = 'scale(1)';
+                e.target.style.zIndex = '3';
+            });
+
+            swatch.addEventListener('mouseout', (e) => {
+                paletteHighlightBox.style.opacity = '0';
+                paletteHighlightBox.style.transform = 'scale(0.8)';
+                e.target.style.zIndex = '1'; // Reset swatch z-index
+            });
+            // --- END FIX ---
+            
+            circularPalette.appendChild(swatch);
+        });
+    }
+    
+    /**
+     * Displays the colors to avoid for the predicted season in a grid format. (Unchanged)
+     */
+    function displayColorsToAvoid(season) {
+        const avoidBox = document.getElementById('colors-avoid-box');
+        const avoidGrid = document.getElementById('avoid-colors-grid');
+        
+        avoidGrid.innerHTML = '';
+        const seasonKey = season.toUpperCase();
+        // Check if the predicted season exists in the avoidance data
+        const colors = colorsToAvoid[seasonKey];
+
+        if (colors && colors.length > 0) {
+            avoidBox.style.display = 'block';
+            colors.forEach(color => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'avoid-swatch-item';
+                
+                const swatch = document.createElement('div');
+                swatch.className = 'avoid-swatch';
+                swatch.style.backgroundColor = color.hex;
+                swatch.title = color.name;
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'avoid-swatch-name';
+                // Display only the first word for brevity
+                nameSpan.textContent = color.name.split(' ')[0]; 
+                
+                itemDiv.appendChild(swatch);
+                itemDiv.appendChild(nameSpan);
+                avoidGrid.appendChild(itemDiv);
+            });
+        } else {
+            // Hide the box if no data is found for the predicted season
+            avoidBox.style.display = 'none';
+        }
+    }
+
+
+    /**
+     * Updates the tabular grid in the modal with all available seasonal colors. (Unchanged)
+     */
+    function displayTabularPalette(allColors) {
+        allPaletteGrid.innerHTML = '';
+        
+        if (allColors.length === 0) {
+            allPaletteGrid.innerHTML = '<p class="text-center text-gray-400">No complete color dataset was received from the server.</p>';
+            return;
+        }
+
+        const seasons = {};
+        allColors.forEach(color => {
+            const seasonName = (color.season || 'Other').toUpperCase();
+            if (!seasons[seasonName]) {
+                seasons[seasonName] = [];
+            }
+            if (!color.name) {
+                color.name = color.hex_code || 'Color'; 
+            }
+            seasons[seasonName].push(color);
+        });
+
+        for (const [season, colors] of Object.entries(seasons)) {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'season-group';
+            
+            const title = document.createElement('h4');
+            title.textContent = season;
+            title.className = 'mb-2 border-b-2 border-blue-400 pb-2 text-blue-300 font-semibold';
+            groupDiv.appendChild(title);
+
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'color-row'; 
+            
+            colors.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'swatch';
+                swatch.style.backgroundColor = color.hex_code;
+                swatch.title = `${color.name} (${color.hex_code})`;
+                
+                swatch.addEventListener('click', () => applyTryOn(color.hex_code));
+                rowDiv.appendChild(swatch);
+            });
+            
+            groupDiv.appendChild(rowDiv);
+            allPaletteGrid.appendChild(groupDiv);
+        }
+    }
+    
+    // --- Gender Filter Event Listeners (Unchanged) ---
+    if (showMenButton && showWomenButton) {
+        showMenButton.addEventListener('click', () => updateSuggestions('Men'));
+        showWomenButton.addEventListener('click', () => updateSuggestions('Women'));
+    }
+
+    window.onload = function() {
+        console.info("App loaded. Click 'Start Camera' to begin the color analysis process.");
+    }
+
+</script>
+</body>
+</html>
