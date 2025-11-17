@@ -1,0 +1,16 @@
+StyleSpectrum is an intelligent, AI-driven personal color analysis system designed to help users discover the colors that best complement their natural features. 
+Built with a combination of image processing techniques and interactive interface design, the tool analyzes a user’s facial image to detect their skin undertone
+and assign them to the most accurate seasonal color category within the 12-season color theory framework. By doing so, it removes the guesswork from choosing 
+suitable colors and provides a professional-level analysis that is easy to use, accessible, and visually engaging.
+
+The system extracts the dominant skin tone using techniques such as CLAHE for lighting normalization, ROI identification,
+and K-Means clustering for accurate color extraction. Once the key skin color values are determined, the tool compares them against 
+a predefined dataset of seasonal palettes using Euclidean distance to find the closest match. This ensures that the user receives a
+scientifically aligned seasonal palette—whether they belong to Light Spring, Deep Autumn, Cool Winter, or any of the other subcategories.
+
+One of the standout features of StyleSpectrum is its real-time virtual try-on module. Users can immediately visualize how various palette colors
+appear on their skin through an interactive interface that overlays selected colors onto their image. 
+This instant feedback not only enhances the user experience but also builds confidence in choosing outfits, makeup, accessories, or hair colors that enhance their natural appearance.
+
+Beyond analysis, StyleSpectrum connects users with personalized outfit suggestions drawn from curated datasets. 
+Each set of recommendations is aligned with both the user’s season and their preferred gender-based styling preferences, making it a complete digital styling assistant.
